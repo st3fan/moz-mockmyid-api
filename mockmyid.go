@@ -24,7 +24,7 @@ func createMockMyIDCertificate(key dsa.PrivateKey, username string, issuedAt tim
 	}
 
 	expiresAt := issuedAt.Add(duration)
-	return CreateCertificate(key, username, "@mockmyid.com", issuedAt, expiresAt, MOCKMYID_KEY) // From webtoken.go
+	return CreateCertificate(key, username, "mockmyid.com", issuedAt, expiresAt, MOCKMYID_KEY) // From webtoken.go
 }
 
 func CreateMockMyIDAssertion(key dsa.PrivateKey, username, audience string, certificateIssuedAt time.Time, certificateDuration time.Duration, assertionIssuedAt time.Time, assertionDuration time.Duration) (string, error) {
