@@ -49,10 +49,10 @@ type CertificatePayload struct {
 	ExpiresAt int64                `json:"exp"`
 }
 
-func NewCertificatePayload(priv dsa.PrivateKey, email string, issuer string, issuedAt time.Time, expiresAt time.Time) *CertificatePayload {
+func NewCertificatePayload(publicKey dsa.PrivateKey, email string, issuer string, issuedAt time.Time, expiresAt time.Time) *CertificatePayload {
 	return &CertificatePayload{
 		Principal: *NewCertificatePrincipal(email),
-		PublicKey: *NewCertificatePublicKey(priv),
+		PublicKey: *NewCertificatePublicKey(publicKey),
 		Issuer:    issuer,
 		IssuedAt:  issuedAt.UnixNano() / int64(time.Millisecond),
 		ExpiresAt: expiresAt.UnixNano() / int64(time.Millisecond),
@@ -63,9 +63,9 @@ type WebTokenHeader struct {
 	Algorithm string `json:"alg"`
 }
 
-func (p *CertificatePayload) Encode(priv dsa.PrivateKey) (string, error) {
+func (p *CertificatePayload) Encode(signingKey dsa.PrivateKey) (string, error) {
 	// Encode the header
-	header := WebTokenHeader{Algorithm: "DS128"} // TODO: Create a function to extract this from the dsa.PrivateKey
+	header := WebTokenHeader{Algorithm: fmt.Sprintf("DS%d", (signingKey.PublicKey.Parameters.P.BitLen()+7)/8)}
 	headerData, err := json.Marshal(header)
 	if err != nil {
 		return "", err
@@ -83,14 +83,24 @@ func (p *CertificatePayload) Encode(priv dsa.PrivateKey) (string, error) {
 	message := encodedHeader + "." + encodedPayload
 
 	// Get the SHA1 hash over the message
-	messageHash := sha1.New().Sum([]byte(message))
+	h := sha1.New()
+	h.Write([]byte(message))
+	messageHash := h.Sum(nil)
 
 	// Calculate the signature over the message
-	r, s, err := dsa.Sign(rand.Reader, &priv, messageHash)
+	r, s, err := dsa.Sign(rand.Reader, &signingKey, messageHash)
 	if err != nil {
 		return "", err
 	}
-	signatureData := append(r.Bytes(), s.Bytes()...)
+
+	signatureData := make([]byte, 40)
+	rb := r.Bytes()
+	sb := s.Bytes()
+	copy(signatureData[20-len(rb):20], rb)
+	copy(signatureData[40-len(sb):], sb)
+
+	//signatureData := append(r.Bytes(), s.Bytes()...)
+
 	encodedSignature := base64.URLEncoding.EncodeToString(signatureData)
 
 	token := message + "." + encodedSignature
@@ -99,8 +109,8 @@ func (p *CertificatePayload) Encode(priv dsa.PrivateKey) (string, error) {
 	return token, nil
 }
 
-func CreateCertificate(key dsa.PrivateKey, email string, issuer string, issuedAt time.Time, expiresAt time.Time, signingKey dsa.PrivateKey) (string, error) {
-	certificatePayload := NewCertificatePayload(key, email, issuer, issuedAt, expiresAt)
+func CreateCertificate(publicKey dsa.PrivateKey, email string, issuer string, issuedAt time.Time, expiresAt time.Time, signingKey dsa.PrivateKey) (string, error) {
+	certificatePayload := NewCertificatePayload(publicKey, email, issuer, issuedAt, expiresAt)
 	return certificatePayload.Encode(signingKey)
 }
 
@@ -142,14 +152,24 @@ func (p *AssertionPayload) Encode(signingKey dsa.PrivateKey) (string, error) {
 	message := encodedHeader + "." + encodedPayload
 
 	// Get the SHA1 hash over the message
-	messageHash := sha1.New().Sum([]byte(message))
+	h := sha1.New()
+	h.Write([]byte(message))
+	messageHash := h.Sum(nil)
 
 	// Calculate the signature over the message
 	r, s, err := dsa.Sign(rand.Reader, &signingKey, messageHash)
 	if err != nil {
 		return "", err
 	}
-	signatureData := append(r.Bytes(), s.Bytes()...)
+
+	signatureData := make([]byte, 40)
+	rb := r.Bytes()
+	sb := s.Bytes()
+	copy(signatureData[20-len(rb):20], rb)
+	copy(signatureData[40-len(sb):], sb)
+
+	//signatureData := append(r.Bytes(), s.Bytes()...)
+
 	encodedSignature := base64.URLEncoding.EncodeToString(signatureData)
 
 	token := message + "." + encodedSignature
