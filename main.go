@@ -5,6 +5,8 @@
 package main
 
 import (
+	"crypto/dsa"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,16 +22,39 @@ const (
 
 type LoginResponse struct {
 	Email     string `json:"email"`
+	Audience  string `json:"audience"`
 	Assertion string `json:"assertion"`
+}
+
+func generateRandomKey() (*dsa.PrivateKey, error) {
+	params := new(dsa.Parameters)
+	if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
+		return nil, err
+	}
+	priv := new(dsa.PrivateKey)
+	priv.PublicKey.Parameters = *params
+	if err := dsa.GenerateKey(priv, rand.Reader); err != nil {
+		return nil, err
+	}
+	return priv, nil
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	email := query["email"][0]
+	audience := query["audience"][0]
+
+	key, err := generateRandomKey()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	assertion, err := CreateShortLivedMockMyIDAssertion(*key, email, audience)
 
 	loginResponse := &LoginResponse{
 		Email:     email,
-		Assertion: "cheesefooblah",
+		Audience:  audience,
+		Assertion: assertion,
 	}
 
 	encodedLoginResponse, err := json.Marshal(loginResponse)
