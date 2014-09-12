@@ -5,6 +5,7 @@
 package main
 
 import (
+	"github.com/st3fan/moz-go-persona"
 	"testing"
 )
 
@@ -21,5 +22,23 @@ func Test_createShortLivedMockMyIDAssertion(t *testing.T) {
 	}
 	if len(assertion) == 0 {
 		t.Error("Got an empty assertion")
+	}
+
+	// Submit the assertion to the Persona verifier to make sure it is ok
+
+	verifier, err := persona.NewVerifier("https://verifier.login.persona.org/verify", "http://localhost:8080")
+	if err != nil {
+		t.Error("Could not create Verifier")
+		return
+	}
+
+	personaResponse, err := verifier.VerifyAssertion(assertion)
+	if err != nil {
+		t.Error("Could not verify assertion")
+		return
+	}
+
+	if personaResponse.Status != "okay" {
+		t.Errorf("Verifier response is not okay: %s / %s", personaResponse.Status, personaResponse.Reason)
 	}
 }
