@@ -10,6 +10,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -23,14 +24,20 @@ func NewCertificatePrincipal(email string) *CertificatePrincipal {
 
 type CertificatePublicKey struct {
 	Algorithm string `json:"algorithm"`
-	y         string `json:"y"`
-	p         string `json:"p"`
-	q         string `json:"q"`
-	g         string `json:"g"`
+	Y         string `json:"y"`
+	P         string `json:"p"`
+	Q         string `json:"q"`
+	G         string `json:"g"`
 }
 
-func NewCertificatePublicKey(priv dsa.PrivateKey) *CertificatePublicKey {
-	return &CertificatePublicKey{Algorithm: "DS"}
+func NewCertificatePublicKey(key dsa.PrivateKey) *CertificatePublicKey {
+	return &CertificatePublicKey{
+		Algorithm: "DS",
+		Y:         fmt.Sprintf("%x", key.PublicKey.Y),
+		P:         fmt.Sprintf("%x", key.PublicKey.Parameters.P),
+		Q:         fmt.Sprintf("%x", key.PublicKey.Parameters.Q),
+		G:         fmt.Sprintf("%x", key.PublicKey.Parameters.G),
+	}
 }
 
 type CertificatePayload struct {
