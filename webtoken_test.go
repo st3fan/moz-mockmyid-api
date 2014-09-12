@@ -7,7 +7,6 @@ package main
 import (
 	"crypto/dsa"
 	"crypto/rand"
-	"log"
 	"testing"
 	"time"
 )
@@ -45,5 +44,4 @@ func Test_CreateCertificate(t *testing.T) {
 	if len(token) == 0 {
 		t.Error("Empty token created")
 	}
-	log.Printf("Token: %s", token)
 }
