@@ -43,13 +43,21 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	email := query["email"][0]
 	audience := query["audience"][0]
+	uniqueKey := query["uniqueKey"]
 
-	key, err := generateRandomKey()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	var clientKey *dsa.PrivateKey
+	if len(uniqueKey) != 0 {
+		key, err := generateRandomKey()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		clientKey = key
+	} else {
+		clientKey = globalRandomKey
 	}
-	assertion, err := CreateShortLivedMockMyIDAssertion(*key, email, audience)
+
+	assertion, err := CreateShortLivedMockMyIDAssertion(*clientKey, email, audience)
 
 	loginResponse := &LoginResponse{
 		Email:     email,
@@ -65,6 +73,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Write(encodedLoginResponse)
+}
+
+var globalRandomKey *dsa.PrivateKey
+
+func init() {
+	log.Print("Generating client DSA key")
+	key, err := generateRandomKey()
+	if err != nil {
+		panic("Cannot generate random key")
+	}
+	globalRandomKey = key
 }
 
 func main() {
