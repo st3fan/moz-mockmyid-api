@@ -4,6 +4,13 @@ go:
   - 1.2
   - 1.3
 
+before_install:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - go get code.google.com/p/go.tools/cmd/cover
+  
 install:
   - go get github.com/st3fan/moz-go-persona
-  
+
+script:
+    - $HOME/gopath/bin/goveralls -repotoken cEnl6s73xovREBXwaBGAeDigOiPqaR2ch
