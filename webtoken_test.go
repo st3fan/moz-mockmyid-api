@@ -5,24 +5,9 @@
 package main
 
 import (
-	"crypto/dsa"
-	"crypto/rand"
 	"testing"
 	"time"
 )
-
-func generateRandomKey() (*dsa.PrivateKey, error) {
-	params := new(dsa.Parameters)
-	if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
-		return nil, err
-	}
-	priv := new(dsa.PrivateKey)
-	priv.PublicKey.Parameters = *params
-	if err := dsa.GenerateKey(priv, rand.Reader); err != nil {
-		return nil, err
-	}
-	return priv, nil
-}
 
 func Test_CreateCertificate(t *testing.T) {
 	key, err := generateRandomKey()
