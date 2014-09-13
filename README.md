@@ -3,9 +3,9 @@
 moz-mockmyid-api
 ================
 
-This projects provides an API for MockMyID to generate assertion. Normally these assertions are obtained by using Persona in a browser environment: after going throuh the login flow, the assertion will be returned to your application via a JavaScript callback. For testing (server-side) code that requires assertions this is not very practical because that full browser environment is usually not available.
+This project provides a simple HTTP API to generate Persona Assertions for the [MockMyID Identity Provider](https://mockmyid.com/). Normally these assertions are obtained by using Persona in a full browser environment: after going throuh the typical Persona login flow, the assertion will be returned to your (web) application via a JavaScript callback. For testing (server-side) code that requires assertions this is not very practical because that full browser environment is usually not available or difficult to interface with.
 
-This is where the MockMyID API comes in. You can make a simple call to obtain a valid (but short-lived) assertion for any `@mockmyid.com` address.
+This is where the MockMyID API comes in. You can make a simple call to obtain a valid (but short-lived) assertion for any `@mockmyid.com` email address.
 
 ```
 GET http://localhost:8124/login?email=stefan@mockmyid.com&audience=http://localhost:8080"
@@ -34,7 +34,7 @@ go get github.com/st3fan/moz-go-persona
 go test -v
 ```
 
-This requires an internet connection since the unit test will contact the Persona Verifier to make sure the generated assertion is correct.
+This does require an internet connection since the unit test will contact the Persona Verifier to make sure the generated assertion is correct.
 
 Running
 -------
