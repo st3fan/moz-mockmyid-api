@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -85,8 +84,8 @@ func main() {
 	flag.Parse()
 
 	prefix := *root
-	if !strings.HasSuffix(prefix, "/") {
-		prefix = prefix + "/"
+	if prefix == "/" {
+		prefix = ""
 	}
 
 	log.Print("Generating client DSA key")
