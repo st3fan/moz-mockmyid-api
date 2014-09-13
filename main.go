@@ -8,16 +8,17 @@ import (
 	"crypto/dsa"
 	"crypto/rand"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
-	MOCKMYID_API_ROOT           = ""
-	MOCKMYID_API_LISTEN_ADDRESS = "0.0.0.0"
-	MOCKMYID_API_LISTEN_PORT    = 8124
-	MOCKMYID_DOMAIN             = "mockmyid.com"
+	MOCKMYID_API_ROOT           = "/"
+	MOCKMYID_API_LISTEN_ADDRESS = "127.0.0.1"
+	MOCKMYID_API_LISTEN_PORT    = 8080
 )
 
 type LoginResponse struct {
@@ -77,20 +78,28 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 var globalRandomKey *dsa.PrivateKey
 
-func init() {
+func main() {
+	address := flag.String("address", MOCKMYID_API_LISTEN_ADDRESS, "address to listen on")
+	port := flag.Int("port", MOCKMYID_API_LISTEN_PORT, "port to listen on")
+	root := flag.String("root", MOCKMYID_API_ROOT, "application root (path prefix)")
+	flag.Parse()
+
+	prefix := *root
+	if !strings.HasSuffix(prefix, "/") {
+		prefix = prefix + "/"
+	}
+
 	log.Print("Generating client DSA key")
 	key, err := generateRandomKey()
 	if err != nil {
 		panic("Cannot generate random key")
 	}
 	globalRandomKey = key
-}
 
-func main() {
-	http.HandleFunc(MOCKMYID_API_ROOT+"/login", handleLogin)
-	addr := fmt.Sprintf("%s:%d", MOCKMYID_API_LISTEN_ADDRESS, MOCKMYID_API_LISTEN_PORT)
-	log.Printf("Starting tokenserver server on http://%s%s", addr, MOCKMYID_API_ROOT)
-	err := http.ListenAndServe(addr, nil)
+	http.HandleFunc(prefix+"/login", handleLogin)
+	addr := fmt.Sprintf("%s:%d", *address, *port)
+	log.Printf("Starting mockmyid-api server on http://%s%s", addr, prefix)
+	err = http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
