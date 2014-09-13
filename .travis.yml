@@ -13,4 +13,4 @@ install:
   - go get github.com/st3fan/moz-go-persona
 
 script:
-    - $HOME/gopath/bin/goveralls -repotoken cEnl6s73xovREBXwaBGAeDigOiPqaR2ch
+  - $HOME/gopath/bin/goveralls -repotoken cEnl6s73xovREBXwaBGAeDigOiPqaR2ch
