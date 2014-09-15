@@ -20,12 +20,6 @@ const (
 	MOCKMYID_API_LISTEN_PORT    = 8080
 )
 
-type LoginResponse struct {
-	Email     string `json:"email"`
-	Audience  string `json:"audience"`
-	Assertion string `json:"assertion"`
-}
-
 func generateRandomKey() (*dsa.PrivateKey, error) {
 	params := new(dsa.Parameters)
 	if err := dsa.GenerateParameters(params, rand.Reader, dsa.L1024N160); err != nil {
@@ -68,6 +62,13 @@ func handleKey(w http.ResponseWriter, r *http.Request) {
 	w.Write(encodedKeyResponse)
 }
 
+type LoginResponse struct {
+	Email     string      `json:"email"`
+	Audience  string      `json:"audience"`
+	Assertion string      `json:"assertion"`
+	ClientKey KeyResponse `json:"clientKey"`
+}
+
 func handleAssertion(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	email := query["email"][0]
@@ -92,6 +93,14 @@ func handleAssertion(w http.ResponseWriter, r *http.Request) {
 		Email:     email,
 		Audience:  audience,
 		Assertion: assertion,
+		ClientKey: KeyResponse{
+			Algorithm: "DS",
+			X:         fmt.Sprintf("%x", clientKey.X),
+			Y:         fmt.Sprintf("%x", clientKey.PublicKey.Y),
+			P:         fmt.Sprintf("%x", clientKey.PublicKey.Parameters.P),
+			Q:         fmt.Sprintf("%x", clientKey.PublicKey.Parameters.Q),
+			G:         fmt.Sprintf("%x", clientKey.PublicKey.Parameters.G),
+		},
 	}
 
 	encodedLoginResponse, err := json.Marshal(loginResponse)
