@@ -38,8 +38,10 @@ This is a Go project with no dependencies. You can simply check it out and run i
 git clone https://github.com/st3fan/moz-mockmyid-api.git
 cd moz-mockmyid-api
 go build
-./moz-mockmyid-api
+./moz-mockmyid-api -address 127.0.0.1 -port 8080 -root /api
 ```
+
+The command parameters are optional. With the above example the application would be available at `http://127.0.0.1:8080/api/`
 
 The tests require a single dependency, after which you can run the tests:
 
@@ -50,7 +52,29 @@ go test -v
 
 This does require an internet connection since the unit test will contact the Persona Verifier to make sure the generated assertion is correct.
 
-Running
--------
+Running via Docker
+------------------
 
-Work in progress: a Dockerfile to more easily host this app.
+The easiest way to run this app is to start a docker container. The latest version of this app is available on the Docker Hub as [st3fan/moz-mockmyid-api](https://registry.hub.docker.com/u/st3fan/moz-mockmyid-api/).
+
+(If you want to build your own docker image, you can use the `docker-image` target in the supplied `Makefile`.)
+
+You can boot up the API as follows:
+
+```
+docker pull st3fan/moz-mockmyid-api
+docker run --name mockmyid-api --publish 8080:8080 st3fan/moz-mockmyid-api
+```
+
+You can now expose the application via your preferred front-end web server or proxy.
+
+The Docker image can be configured with the following environment variables:
+
+Variable | Default | Description
+-------- | ------- | -------------------
+ADDRESS  | 127.0.0.1 | The address to listen on
+PORT     | 8080      | The port to listen on
+ROOT     | /         | The URL path prefix on which to mount the API
+
+These map directly to the application's `-address`, `-port` and `-root` command line arguments. Usually the defaults are fine.
+
