@@ -8,12 +8,26 @@ This project provides a simple HTTP API to generate Persona Assertions for the [
 This is where the MockMyID API comes in. You can make a simple call to obtain a valid (but short-lived) assertion for any `@mockmyid.com` email address.
 
 ```
-GET http://localhost:8124/login?email=stefan@mockmyid.com&audience=http://localhost:8080"
+GET http://localhost:8080/assertion?email=stefan@mockmyid.com&audience=http://localhost:8080"
 
 { "email":"stefan@mockmyid.com",
   "audience":"http://localhost:8080",
   "assertion":"eyJhbGciOiJEUzEy...very-long-encoded-assertion...RLn-r9StaxpUw5g==" }
 ```
+
+You can also request the private key for MockMyID in case you need that for your tests:
+
+```
+GET http://localhost:8080/key
+{ "algorithm":"DS",
+  "x":"385cb3509f086e110c5e24bdd395a84b335a09ae",
+  "y":"738e...c929",
+  "p":"ff60...0483",
+  "q":"e21e04f911d1ed7991008ecaab3bf775984309c3",
+  "g":"c52a...4a0f" }
+```
+
+(The key is not secret, see [provision.html](https://github.com/callahad/mockmyid/blob/master/public_html/browserid/provision.html))
 
 Building
 --------
