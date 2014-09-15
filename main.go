@@ -39,7 +39,36 @@ func generateRandomKey() (*dsa.PrivateKey, error) {
 	return priv, nil
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
+type KeyResponse struct {
+	Algorithm string `json:"algorithm"`
+	X         string `json:"x"`
+	Y         string `json:"y"`
+	P         string `json:"p"`
+	Q         string `json:"q"`
+	G         string `json:"g"`
+}
+
+func handleKey(w http.ResponseWriter, r *http.Request) {
+	keyResponse := KeyResponse{
+		Algorithm: "DS",
+		X:         fmt.Sprintf("%x", MOCKMYID_KEY.X),
+		Y:         fmt.Sprintf("%x", MOCKMYID_KEY.PublicKey.Y),
+		P:         fmt.Sprintf("%x", MOCKMYID_KEY.PublicKey.Parameters.P),
+		Q:         fmt.Sprintf("%x", MOCKMYID_KEY.PublicKey.Parameters.Q),
+		G:         fmt.Sprintf("%x", MOCKMYID_KEY.PublicKey.Parameters.G),
+	}
+
+	encodedKeyResponse, err := json.Marshal(keyResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Write(encodedKeyResponse)
+}
+
+func handleAssertion(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	email := query["email"][0]
 	audience := query["audience"][0]
@@ -95,7 +124,9 @@ func main() {
 	}
 	globalRandomKey = key
 
-	http.HandleFunc(prefix+"/login", handleLogin)
+	http.HandleFunc(prefix+"/assertion", handleAssertion)
+	http.HandleFunc(prefix+"/key", handleKey)
+
 	addr := fmt.Sprintf("%s:%d", *address, *port)
 	log.Printf("Starting mockmyid-api server on http://%s%s", addr, prefix)
 	err = http.ListenAndServe(addr, nil)
