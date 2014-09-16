@@ -132,6 +132,18 @@ func handleAssertion(w http.ResponseWriter, r *http.Request) {
 
 var globalRandomKey *dsa.PrivateKey
 
+func setupHandlers(prefix string) {
+	log.Print("Generating client DSA key")
+	key, err := generateRandomKey()
+	if err != nil {
+		panic("Cannot generate random key")
+	}
+	globalRandomKey = key
+
+	http.HandleFunc(prefix+"/assertion", handleAssertion)
+	http.HandleFunc(prefix+"/key", handleKey)
+}
+
 func main() {
 	address := flag.String("address", MOCKMYID_API_LISTEN_ADDRESS, "address to listen on")
 	port := flag.Int("port", MOCKMYID_API_LISTEN_PORT, "port to listen on")
@@ -143,19 +155,11 @@ func main() {
 		prefix = ""
 	}
 
-	log.Print("Generating client DSA key")
-	key, err := generateRandomKey()
-	if err != nil {
-		panic("Cannot generate random key")
-	}
-	globalRandomKey = key
-
-	http.HandleFunc(prefix+"/assertion", handleAssertion)
-	http.HandleFunc(prefix+"/key", handleKey)
+	setupHandlers(prefix)
 
 	addr := fmt.Sprintf("%s:%d", *address, *port)
 	log.Printf("Starting mockmyid-api server on http://%s%s", addr, prefix)
-	err = http.ListenAndServe(addr, nil)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
