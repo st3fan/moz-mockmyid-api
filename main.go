@@ -71,12 +71,27 @@ type LoginResponse struct {
 
 func handleAssertion(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
+
+	// Get and verify parameters
+
+	if query["email"] == nil {
+		http.Error(w, "No email parameter supplied", http.StatusBadRequest)
+		return
+	}
 	email := query["email"][0]
+
+	if query["audience"] == nil {
+		http.Error(w, "No audience parameter supplied", http.StatusBadRequest)
+		return
+	}
 	audience := query["audience"][0]
-	uniqueKey := query["uniqueKey"]
+
+	// Check if the caller wants a unique key
+
+	uniqueClientKey := query["uniqueClientKey"]
 
 	var clientKey *dsa.PrivateKey
-	if len(uniqueKey) != 0 {
+	if uniqueClientKey != nil {
 		key, err := generateRandomKey()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -86,6 +101,8 @@ func handleAssertion(w http.ResponseWriter, r *http.Request) {
 	} else {
 		clientKey = globalRandomKey
 	}
+
+	// Create an assertion and return it together with the key used
 
 	assertion, err := CreateShortLivedMockMyIDAssertion(*clientKey, email, audience)
 
